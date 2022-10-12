@@ -1,20 +1,16 @@
-## TODO: these phases probably get renamed
-##
-## TODO: there are two phases for run - one copies files around before
-## running, the other is within the run phase?
 orderly_db_plugin <- function() {
   schema <- system.file("orderly.db.json", package = "orderly2.db",
                         mustWork = TRUE)
-  orderly2:::orderly_plugin(orderly_db_check,
-                            orderly_db_read,
-                            orderly_db_prepare,
-                            schema)
+  orderly2::orderly_plugin(orderly_db_config,
+                           orderly_db_read,
+                           orderly_db_run,
+                           schema)
 }
 
 
-## Reads orderly_config.yml, checks plugin configuration. Evaluated
+## Reads orderly_config.yml, configs plugin configuration. Evaluated
 ## from the root directory.
-orderly_db_check <- function(data, filename) {
+orderly_db_config <- function(data, filename) {
   fieldname <- function(x) sprintf("%s:orderly2.db:%s", filename, x)
   assert_named(data, unique = TRUE, name = sprintf("%s:orderly2.db", filename))
   for (nm in names(data)) {
@@ -94,7 +90,7 @@ orderly_db_read <- function(data, filename, root) {
 }
 
 
-orderly_db_prepare <- function(config, data, environment, path) {
+orderly_db_run <- function(config, data, parameters, environment, path) {
   res <- list(data = list())
 
   connections <- list()

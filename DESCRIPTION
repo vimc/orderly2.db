@@ -18,7 +18,7 @@ BugReports: https://github.com/vimc/orderly2.db/issues
 Imports:
     DBI,
     RSQLite,
-    orderly2
+    orderly2 (>= 0.1.2)
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
