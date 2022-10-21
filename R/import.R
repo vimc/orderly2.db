@@ -10,13 +10,6 @@ check_symbol_from_str <- function(str, name) {
 }
 
 
-## TODO: - in orderly we should check for paths starting with ~, or
-## just use fs here
-is_absolute_path <- function(path) {
-  grepl("^(~|/|[A-Z]:)", path, ignore.case = TRUE)
-}
-
-
 check_fields <- orderly2:::check_fields
 assert_named <- orderly2:::assert_named
 assert_scalar_character <- orderly2:::assert_scalar_character

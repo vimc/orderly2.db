@@ -5,10 +5,10 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
                     email = "rich.fitzjohn@gmail.com"),
              person("Imperial College of Science, Technology and Medicine",
                     role = "cph"))
-Description: Access databases from 'orderly2' while running packets.
+Description: Access databases from 'orderly2' while running reports.
     Includes the basic 'SQL' support originally included in 'orderly'
     for establishing connections and setting up data for use within a
-    packet.
+    report.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -17,8 +17,9 @@ URL: https://github.com/vimc/orderly2.db
 BugReports: https://github.com/vimc/orderly2.db/issues
 Imports:
     DBI,
-    RSQLite,
+    fs,
     orderly2 (>= 0.1.2)
 Suggests:
+    RSQLite,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

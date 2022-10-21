@@ -1,0 +1,12 @@
+orderly2.db:
+  data:
+    dat1:
+      query: SELECT * FROM mtcars
+      database: source
+
+script: script.R
+
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png

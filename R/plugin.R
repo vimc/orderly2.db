@@ -90,7 +90,8 @@ orderly_db_read <- function(data, filename, root) {
 }
 
 
-orderly_db_run <- function(config, data, parameters, environment, path) {
+orderly_db_run <- function(data, root, parameters, environment, path) {
+  config <- root$config$orderly2.db
   res <- list(data = list())
 
   connections <- list()
@@ -100,10 +101,8 @@ orderly_db_run <- function(config, data, parameters, environment, path) {
   for (nm in names(data$data)) {
     database <- data$data[[nm]]$database
     if (is.null(connections[[database]])) {
-      message(sprintf("Connecting to database '%s'", database))
       connections[[database]] <- orderly_db_connect(database, config)
     }
-    message(sprintf("Fetching data '%s'", nm))
     res$data[[nm]] <- DBI::dbGetQuery(
       connections[[database]], data$data[[nm]]$query)
     environment[[nm]] <- res$data[[nm]]
@@ -115,17 +114,17 @@ orderly_db_run <- function(config, data, parameters, environment, path) {
     DBI::dbDisconnect(con)
   }
 
-  ## We then need to serialise something about the downloaded data,
-  ## but for now we just return a list. Saving a hash would be ideal
-  ## really, along side columns (+ types?) and number of rows.
-
-  ## We might also save the final queries too, along with the instance
-  ## information (i.e., all the information that might end up not end
-  ## up in the final accounting?
   orderly_db_build_metadata(res)
 }
 
 
+## We then need to serialise something about the downloaded data,
+## but for now we just return a list. Saving a hash would be ideal
+## really, along side columns (+ types?) and number of rows.
+
+## We might also save the final queries too, along with the instance
+## information (i.e., all the information that might end up not end
+## up in the final accounting?
 orderly_db_build_metadata <- function(data) {
   dat <- list(
     data = lapply(data$data, function(d) {
