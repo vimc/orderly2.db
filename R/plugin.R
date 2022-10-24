@@ -98,8 +98,6 @@ orderly_db_run <- function(data, root, parameters, environment, path) {
     environment[[nm]] <- res$data[[nm]]
   }
 
-  ## TODO: copy out connections to the environment (don't close them)
-
   for (con in connections) {
     DBI::dbDisconnect(con)
   }

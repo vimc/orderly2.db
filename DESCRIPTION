@@ -21,5 +21,6 @@ Imports:
     orderly2 (>= 0.1.2)
 Suggests:
     RSQLite,
+    mockery,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -121,6 +121,64 @@ test_that("validate orderly.yml read", {
 })
 
 
+test_that("pull data from run function", {
+  cars <- cbind(name = rownames(mtcars), mtcars)
+  rownames(cars) <- NULL
+  path <- test_prepare_example("minimal", list(cars = cars))
+
+  root <- orderly2:::orderly_root(path, FALSE)
+  data <- list(data = list(a = list(query = "SELECT * from cars",
+                                    database = "source")))
+  tmp <- tempfile()
+  env <- new.env(parent = topenv())
+  meta <- orderly_db_run(data, root, list(), env, tmp)
+  expect_equal(ls(env), "a")
+  expect_equal(env$a, cars)
+
+  expect_s3_class(meta, "json")
+  expect_mapequal(
+    jsonlite::fromJSON(meta),
+    list(data = list(a = list(rows = nrow(cars), cols = names(cars)))))
+})
+
+
+test_that("run function cleans up connections", {
+  skip_if_not_installed("mockery")
+
+  cars <- cbind(name = rownames(mtcars), mtcars)
+  rownames(cars) <- NULL
+  path <- test_prepare_example("minimal", list(cars = cars))
+
+  con <- new.env() # just gives us a singleton
+  mock_connect <- mockery::mock(con)
+  mock_query <- mockery::mock(cars)
+  mock_disconnect <- mockery::mock()
+  mockery::stub(orderly_db_run, "orderly_db_connect", mock_connect)
+  mockery::stub(orderly_db_run, "DBI::dbGetQuery", mock_query)
+  mockery::stub(orderly_db_run, "DBI::dbDisconnect", mock_disconnect)
+
+  root <- orderly2:::orderly_root(path, FALSE)
+  data <- list(data = list(a = list(query = "SELECT * from cars",
+                                    database = "source")))
+  tmp <- tempfile()
+  env <- new.env(parent = topenv())
+  meta <- orderly_db_run(data, root, list(), env, tmp)
+  expect_equal(ls(env), "a")
+  expect_equal(env$a, cars)
+
+  mockery::expect_called(mock_connect, 1)
+  expect_equal(mockery::mock_args(mock_connect)[[1]],
+               list("source", root$config$orderly2.db))
+
+  mockery::expect_called(mock_query, 1)
+  expect_identical(mockery::mock_args(mock_query)[[1]][[1]], con)
+  expect_equal(mockery::mock_args(mock_query)[[1]][[2]], "SELECT * from cars")
+
+  mockery::expect_called(mock_disconnect, 1)
+  expect_equal(mockery::mock_args(mock_disconnect)[[1]], list(con))
+})
+
+
 test_that("can construct plugin", {
   expect_identical(orderly_db_plugin(),
                    orderly2:::.plugins$orderly2.db)
