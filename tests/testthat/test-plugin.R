@@ -76,6 +76,51 @@ test_that("validate db for sqlite", {
 })
 
 
+test_that("validate orderly.yml read", {
+  mock_root <- list(config = list(orderly2.db = list(db = list())))
+  expect_error(
+    orderly_db_read(list(), "orderly.yml", mock_root),
+    "'orderly.yml:orderly2.db' must be named")
+  expect_error(
+    orderly_db_read(list(a = TRUE), "orderly.yml", mock_root),
+    "Fields missing from orderly.yml:orderly2.db: data")
+  expect_error(
+    orderly_db_read(list(data = list(a = TRUE)), "orderly.yml", mock_root),
+    "Fields missing from orderly.yml:orderly2.db:data:a: query, database")
+  expect_error(
+    orderly_db_read(
+      list(data = list(a = list(query = TRUE, database = "other"))),
+      "orderly.yml", mock_root),
+    "orderly.yml:orderly2.db:data:a:database must be one of 'db'")
+  expect_error(
+    orderly_db_read(
+      list(data = list(a = list(query = TRUE, database = "db"))),
+      "orderly.yml", mock_root),
+    "'orderly.yml:orderly2.db:data:a:query' must be character")
+
+
+  expect_equal(
+    orderly_db_read(
+      list(data = list(a = list(query = "SELECT *", database = "db"))),
+      "orderly.yml", mock_root),
+    list(data = list(a = list(query = "SELECT *", database = "db"))))
+  expect_equal(
+    orderly_db_read(
+      list(data = list(a = list(query = c("SELECT", "*"), database = "db"))),
+      "orderly.yml", mock_root),
+    list(data = list(a = list(query = "SELECT\n*", database = "db"))))
+
+  tmp <- tempfile()
+  on.exit(unlink(tmp))
+  writeLines(c("SELECT", "*"), tmp)
+  expect_equal(
+    orderly_db_read(
+      list(data = list(a = list(query = tmp, database = "db"))),
+      "orderly.yml", mock_root),
+    list(data = list(a = list(query = "SELECT\n*", database = "db"))))
+})
+
+
 test_that("can construct plugin", {
   expect_identical(orderly_db_plugin(),
                    orderly2:::.plugins$orderly2.db)

@@ -56,8 +56,6 @@ orderly_db_config <- function(data, filename) {
 ## Reads orderly.yml, checks plugin use. Evaluated from the
 ## packet/report source directory
 orderly_db_read <- function(data, filename, root) {
-  ## TODO: I am not sure why this gets the entire root object, but
-  ## nothing else does.
   prefix <- sprintf("%s:orderly2.db", filename)
   assert_named(data, name = prefix)
   check_fields(data, prefix, "data", NULL)
@@ -80,10 +78,6 @@ orderly_db_read <- function(data, filename, root) {
     data$data[[nm]]$query <- query
   }
 
-  ## This return value also needs work - a plugin might reasonably
-  ## create files here (ours effectively does by reading in queries)
-  ## so we might want to indicate to orderly what we've done. So we
-  ## probably need some helper type?
   data
 }
 
@@ -93,8 +87,6 @@ orderly_db_run <- function(data, root, parameters, environment, path) {
   res <- list(data = list())
 
   connections <- list()
-
-  ## TODO: process views
 
   for (nm in names(data$data)) {
     database <- data$data[[nm]]$database
