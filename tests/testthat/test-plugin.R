@@ -55,7 +55,8 @@ test_that("validate db for sqlite", {
       "orderly_config.yml"),
     "Can't use an in-memory database with orderly2.db")
 
-  db <- tempfile(tmpdir = normalizePath(tempdir(), mustWork = TRUE))
+  db <- tempfile(
+    tmpdir = normalizePath(tempdir(), mustWork = TRUE, winslash = "/"))
   expected <- list(db = list(driver = c("RSQLite", "SQLite"),
                              args = list(dbname = db)))
 
