@@ -18,10 +18,12 @@ BugReports: https://github.com/vimc/orderly2.db/issues
 Imports:
     DBI,
     fs,
+    jsonlite,
     orderly2 (>= 0.1.2)
 Suggests:
     RSQLite,
     mockery,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3
 Remotes: vimc/orderly2
