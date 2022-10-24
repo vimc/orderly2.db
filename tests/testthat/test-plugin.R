@@ -74,3 +74,9 @@ test_that("validate db for sqlite", {
         "orderly_config.yml"),
       expected))
 })
+
+
+test_that("can construct plugin", {
+  expect_identical(orderly_db_plugin(),
+                   orderly2:::.plugins$orderly2.db)
+})
