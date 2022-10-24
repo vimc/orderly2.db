@@ -15,14 +15,12 @@ orderly_db_config <- function(data, filename) {
   assert_named(data, unique = TRUE, name = sprintf("%s:orderly2.db", filename))
   for (nm in names(data)) {
     db <- data[[nm]]
-    prefix <- sprintf("%s:orderly2.db:%s:", filename, nm)
+    prefix <- sprintf("%s:orderly2.db:%s", filename, nm)
     check_fields(db, prefix, c("driver", "args"), NULL)
     driver <- check_symbol_from_str(db$driver, paste0(prefix, ":driver"))
     data[[nm]]$driver <- driver
 
-    if (!is.null(db$args)) {
-      assert_named(db$args, TRUE, paste0(prefix, ":args"))
-    }
+    assert_named(db$args, TRUE, paste0(prefix, ":args"))
     ## TODO: instances here, once we support them, both instances and
     ## default_instance field
 

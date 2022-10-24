@@ -1,7 +1,7 @@
 ## Functions copied over from orderly:
 
 check_symbol_from_str <- function(str, name) {
-  assert_scalar_character(str)
+  assert_scalar_character(str, name)
   dat <- strsplit(str, "::", fixed = TRUE)[[1L]]
   if (length(dat) != 2) {
     stop(sprintf("Expected fully qualified name for %s", name))
