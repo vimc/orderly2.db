@@ -11,7 +11,6 @@ orderly_db_plugin <- function() {
 ## Reads orderly_config.yml, configs plugin configuration. Evaluated
 ## from the root directory.
 orderly_db_config <- function(data, filename) {
-  fieldname <- function(x) sprintf("%s:orderly2.db:%s", filename, x)
   assert_named(data, unique = TRUE, name = sprintf("%s:orderly2.db", filename))
   for (nm in names(data)) {
     db <- data[[nm]]
