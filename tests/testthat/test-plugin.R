@@ -17,6 +17,39 @@ test_that("basic plugin use works", {
 })
 
 
+test_that("allow connection", {
+  root <- test_prepare_example("connection", list(mtcars = mtcars))
+  env <- new.env()
+  id <- orderly2::orderly_run("connection", root = root, envir = env)
+
+  expect_type(id, "character")
+
+  expect_true(file.exists(
+    file.path(root, "archive", "connection", id, "mygraph.png")))
+
+  ## Save a copy of the connection out:
+  con <- env$con1
+  expect_s4_class(con, "SQLiteConnection")
+  expect_true(DBI::dbIsValid(con))
+  expect_equal(DBI::dbListTables(con), "mtcars") # still works
+
+  ## Force cleanup, check it closes connection:
+  rm(env)
+  gc()
+  expect_false(DBI::dbIsValid(con))
+
+  meta <- outpack::outpack_root_open(root)$metadata(id, TRUE)
+  meta_db <- meta$custom$orderly$plugins$orderly2.db
+  expect_setequal(names(meta_db), c("data", "connection"))
+  expect_setequal(names(meta_db$data), "dat1")
+  expect_setequal(names(meta_db$data$dat1), c("rows", "cols"))
+  expect_equal(meta_db$data$dat1$rows, nrow(mtcars))
+  expect_equal(meta_db$data$dat1$cols, as.list(names(mtcars)))
+
+  expect_equal(meta_db$connection, list(con1 = "source"))
+})
+
+
 test_that("validate plugin configuration", {
   expect_error(
     orderly_db_config(list(), "orderly_config.yml"),
