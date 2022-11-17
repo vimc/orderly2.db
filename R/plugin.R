@@ -85,6 +85,8 @@ orderly_db_read <- function(data, filename, root) {
   for (nm in names(data$connection)) {
     assert_character(data$connection[[nm]],
                      sprintf("%s:connection:%s", prefix, nm))
+    match_value(data$connection[[nm]], names(root$config$orderly2.db),
+                sprintf("%s:connection:%s", prefix, nm))
   }
 
   data
