@@ -56,8 +56,14 @@ orderly_db_config <- function(data, filename) {
 ## packet/report source directory
 orderly_db_read <- function(data, filename, root) {
   prefix <- sprintf("%s:orderly2.db", filename)
+  optional <- c("data", "connection")
+  if (length(data) == 0) {
+    stop(sprintf("At least one of %s must be given in '%s'",
+                 paste(squote(optional), collapse = " or "),
+                 prefix))
+  }
   assert_named(data, name = prefix)
-  check_fields(data, prefix, NULL, c("data", "connection"))
+  check_fields(data, prefix, NULL, optional)
 
   if (length(data$data) > 0 ){
     assert_named(data$data, unique = TRUE, paste0(prefix, ":data"))

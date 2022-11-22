@@ -15,3 +15,4 @@ assert_named <- orderly2:::assert_named
 assert_scalar_character <- orderly2:::assert_scalar_character
 assert_character <- orderly2:::assert_character
 match_value <- orderly2:::match_value
+squote <- orderly2:::squote

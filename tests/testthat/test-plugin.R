@@ -193,6 +193,14 @@ test_that("validate read connection", {
 })
 
 
+test_that("require either connection or data", {
+  mock_root <- list(config = list(orderly2.db = list(db = list())))
+  expect_error(
+    orderly_db_read(list(), "orderly.yml", mock_root),
+    "At least one of 'data' or 'connection' must be given")
+})
+
+
 test_that("pull data from run function", {
   cars <- cbind(name = rownames(mtcars), mtcars)
   rownames(cars) <- NULL
