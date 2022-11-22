@@ -135,7 +135,7 @@ test_that("validate db for sqlite", {
 test_that("validate orderly.yml read", {
   mock_root <- list(config = list(orderly2.db = list(db = list())))
   expect_error(
-    orderly_db_read(list(), "orderly.yml", mock_root),
+    orderly_db_read(list(1), "orderly.yml", mock_root),
     "'orderly.yml:orderly2.db' must be named")
   expect_error(
     orderly_db_read(list(data = list(a = TRUE)), "orderly.yml", mock_root),
