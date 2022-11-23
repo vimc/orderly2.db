@@ -56,10 +56,18 @@ orderly_db_config <- function(data, filename) {
 ## packet/report source directory
 orderly_db_read <- function(data, filename, root) {
   prefix <- sprintf("%s:orderly2.db", filename)
+  optional <- c("data", "connection")
+  if (length(data) == 0) {
+    stop(sprintf("At least one of %s must be given in '%s'",
+                 paste(squote(optional), collapse = " or "),
+                 prefix))
+  }
   assert_named(data, name = prefix)
-  check_fields(data, prefix, "data", NULL)
+  check_fields(data, prefix, NULL, optional)
 
-  assert_named(data$data, unique = TRUE, paste0(prefix, ":data"))
+  if (length(data$data) > 0 ){
+    assert_named(data$data, unique = TRUE, paste0(prefix, ":data"))
+  }
   for (nm in names(data$data)) {
     check_fields(data$data[[nm]], sprintf("%s:data:%s", prefix, nm),
                  c("query", "database"), NULL)
@@ -75,6 +83,16 @@ orderly_db_read <- function(data, filename, root) {
       query <- paste(query, collapse = "\n")
     }
     data$data[[nm]]$query <- query
+  }
+
+  if (length(data$connection) > 0 ){
+    assert_named(data$connection, unique = TRUE, paste0(prefix, ":connection"))
+  }
+  for (nm in names(data$connection)) {
+    assert_character(data$connection[[nm]],
+                     sprintf("%s:connection:%s", prefix, nm))
+    match_value(data$connection[[nm]], names(root$config$orderly2.db),
+                sprintf("%s:connection:%s", prefix, nm))
   }
 
   data
@@ -97,8 +115,27 @@ orderly_db_run <- function(data, root, parameters, environment, path) {
     environment[[nm]] <- res$data[[nm]]
   }
 
-  for (con in connections) {
-    DBI::dbDisconnect(con)
+  export <- unlist(data$connection, FALSE, FALSE)
+
+  ## If a connection is used to a database that we we don't extract
+  ## data from, it won't be present yet, so add that here:
+  for (database in setdiff(export, names(connections))) {
+    connections[[database]] <- orderly_db_connect(database, config)
+  }
+
+  ## Close all the connections that are not needed in the report
+  ## itself
+  orderly_db_disconnect(connections[setdiff(names(connections), export)])
+
+  ## If any are used in the report, export them to the environment and
+  ## arrange to close them when the environment goes out of scope.
+  if (length(export) > 0) {
+    list2env(lapply(data$connection, function(x) connections[[x]]),
+             environment)
+    res$connection <- data$connection
+    reg.finalizer(environment, function(e) {
+      orderly_db_disconnect(connections[export])
+    })
   }
 
   orderly_db_build_metadata(res)
@@ -117,7 +154,10 @@ orderly_db_build_metadata <- function(data) {
     data = lapply(data$data, function(d) {
       list(rows = jsonlite::unbox(nrow(d)),
            cols = names(d))
-    }))
+    }),
+    connection = lapply(data$connection, jsonlite::unbox)
+  )
+
   jsonlite::toJSON(dat, auto_unbox = FALSE, pretty = FALSE, na = "null",
                    null = "null")
 }
@@ -127,4 +167,11 @@ orderly_db_connect <- function(name, config) {
   x <- config[[name]]
   driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
   do.call(DBI::dbConnect, c(list(driver()), x$args))
+}
+
+
+orderly_db_disconnect <- function(connections) {
+  for (con in connections) {
+    DBI::dbDisconnect(con)
+  }
 }

@@ -1,0 +1,10 @@
+orderly2.db:
+  connection:
+    con1: source
+
+script: script.R
+
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png
