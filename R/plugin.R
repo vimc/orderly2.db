@@ -56,7 +56,7 @@ orderly_db_config <- function(data, filename) {
 ## packet/report source directory
 orderly_db_read <- function(data, filename, root) {
   prefix <- sprintf("%s:orderly2.db", filename)
-  optional <- c("data", "connection")
+  optional <- c("data", "views", "connection")
   if (length(data) == 0) {
     stop(sprintf("At least one of %s must be given in '%s'",
                  paste(squote(optional), collapse = " or "),
@@ -65,25 +65,9 @@ orderly_db_read <- function(data, filename, root) {
   assert_named(data, name = prefix)
   check_fields(data, prefix, NULL, optional)
 
-  if (length(data$data) > 0 ){
-    assert_named(data$data, unique = TRUE, paste0(prefix, ":data"))
-  }
-  for (nm in names(data$data)) {
-    check_fields(data$data[[nm]], sprintf("%s:data:%s", prefix, nm),
-                 c("query", "database"), NULL)
-    match_value(data$data[[nm]]$database, names(root$config$orderly2.db),
-                sprintf("%s:data:%s:database", prefix, nm))
-
-    query <- data$data[[nm]]$query
-    assert_character(query, sprintf("%s:data:%s:query", prefix, nm))
-    if (length(query) == 1 && file.exists(query)) {
-      query <- readLines(query)
-    }
-    if (length(query) > 1) {
-      query <- paste(query, collapse = "\n")
-    }
-    data$data[[nm]]$query <- query
-  }
+  databases <- names(root$config$orderly2.db)
+  data <- validate_query(data, "data", databases, prefix)
+  data <- validate_query(data, "views", databases, prefix)
 
   if (length(data$connection) > 0 ){
     assert_named(data$connection, unique = TRUE, paste0(prefix, ":connection"))
@@ -91,7 +75,7 @@ orderly_db_read <- function(data, filename, root) {
   for (nm in names(data$connection)) {
     assert_character(data$connection[[nm]],
                      sprintf("%s:connection:%s", prefix, nm))
-    match_value(data$connection[[nm]], names(root$config$orderly2.db),
+    match_value(data$connection[[nm]], databases,
                 sprintf("%s:connection:%s", prefix, nm))
   }
 
@@ -174,4 +158,29 @@ orderly_db_disconnect <- function(connections) {
   for (con in connections) {
     DBI::dbDisconnect(con)
   }
+}
+
+
+validate_query <- function(data, field, databases, prefix) {
+  if (length(data[[field]]) > 0) {
+    assert_named(data[[field]], unique = TRUE, sprintf("%s:%s", prefix, field))
+  }
+
+  for (nm in names(data[[field]])) {
+    check_fields(data[[field]][[nm]], sprintf("%s:%s:%s", prefix, field, nm),
+                 c("query", "database"), NULL)
+    match_value(data[[field]][[nm]]$database, databases,
+                sprintf("%s:%s:%s:database", prefix, field, nm))
+
+    query <- data[[field]][[nm]]$query
+    assert_character(query, sprintf("%s:%s:%s:query", prefix, field, nm))
+    if (length(query) == 1 && file.exists(query)) {
+      query <- readLines(query)
+    }
+    if (length(query) > 1) {
+      query <- paste(query, collapse = "\n")
+    }
+    data[[field]][[nm]]$query <- query
+  }
+  data
 }
