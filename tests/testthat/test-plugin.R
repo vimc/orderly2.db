@@ -275,8 +275,10 @@ test_that("can construct a view, then read from it", {
   expect_true(file.exists(
     file.path(root, "archive", "view", id, "mygraph.png")))
 
-  con <- DBI::dbConnect(RSQLite::SQLite(), file.path(root, "source.sqlite"))
-  ## View not present here, it was only available to the client that
-  ## created it.
-  expect_equal(DBI::dbListTables(con), "mtcars")
+  path_db <- file.path(root, "source.sqlite")
+  withr::with_db_connection(
+    list(con = DBI::dbConnect(RSQLite::SQLite(), path_db)),
+    ## View not present here, it was only available to the client that
+    ## created it.
+    expect_equal(DBI::dbListTables(con), "mtcars"))
 })
