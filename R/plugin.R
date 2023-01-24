@@ -178,9 +178,20 @@ validate_query <- function(data, field, databases, prefix) {
 
   for (nm in names(data[[field]])) {
     check_fields(data[[field]][[nm]], sprintf("%s:%s:%s", prefix, field, nm),
-                 c("query", "database"), NULL)
-    match_value(data[[field]][[nm]]$database, databases,
-                sprintf("%s:%s:%s:database", prefix, field, nm))
+                 "query", "database")
+    if (is.null(data[[field]][[nm]]$database)) {
+      if (length(databases) > 1L) {
+        stop(paste(
+          sprintf("More than one database configured (%s); a 'database'",
+                  paste(squote(databases), collapse = ", ")),
+          sprintf("field is required for '%s:%s:%s'", prefix, field, nm)),
+          call. = FALSE)
+      }
+      data[[field]][[nm]]$database <- databases[[1]]
+    } else {
+      match_value(data[[field]][[nm]]$database, databases,
+                  sprintf("%s:%s:%s:database", prefix, field, nm))
+    }
 
     query <- data[[field]][[nm]]$query
     assert_character(query, sprintf("%s:%s:%s:query", prefix, field, nm))

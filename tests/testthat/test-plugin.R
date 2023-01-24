@@ -139,7 +139,7 @@ test_that("validate orderly.yml read", {
     "'orderly.yml:orderly2.db' must be named")
   expect_error(
     orderly_db_read(list(data = list(a = TRUE)), "orderly.yml", mock_root),
-    "Fields missing from orderly.yml:orderly2.db:data:a: query, database")
+    "Fields missing from orderly.yml:orderly2.db:data:a: query")
   expect_error(
     orderly_db_read(
       list(data = list(a = list(query = TRUE, database = "other"))),
@@ -170,6 +170,29 @@ test_that("validate orderly.yml read", {
       list(data = list(a = list(query = tmp, database = "db"))),
       "orderly.yml", mock_root),
     list(data = list(a = list(query = "SELECT\n*", database = "db"))))
+})
+
+
+test_that("fall back on default db if not specified", {
+  mock_root <- list(config = list(orderly2.db = list(db = list())))
+  expect_equal(
+    orderly_db_read(
+      list(data = list(a = list(query = "SELECT *"))),
+      "orderly.yml", mock_root),
+    list(data = list(a = list(query = "SELECT *", database = "db"))))
+})
+
+
+test_that("error if db not specified and more than one db possible", {
+  mock_root <- list(config = list(
+                      orderly2.db = list(db1 = list(), db2 = list())))
+  expect_error(
+    orderly_db_read(
+      list(data = list(a = list(query = "SELECT *"))),
+      "orderly.yml", mock_root),
+    paste("More than one database configured ('db1', 'db2');",
+          "a 'database' field is required for 'orderly.yml:orderly2.db:data:a"),
+    fixed = TRUE)
 })
 
 
