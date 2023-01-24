@@ -139,7 +139,7 @@ test_that("validate orderly.yml read", {
     "'orderly.yml:orderly2.db' must be named")
   expect_error(
     orderly_db_read(list(data = list(a = TRUE)), "orderly.yml", mock_root),
-    "Fields missing from orderly.yml:orderly2.db:data:a: query, database")
+    "Fields missing from orderly.yml:orderly2.db:data:a: query")
   expect_error(
     orderly_db_read(
       list(data = list(a = list(query = TRUE, database = "other"))),
@@ -173,6 +173,29 @@ test_that("validate orderly.yml read", {
 })
 
 
+test_that("fall back on default db if not specified", {
+  mock_root <- list(config = list(orderly2.db = list(db = list())))
+  expect_equal(
+    orderly_db_read(
+      list(data = list(a = list(query = "SELECT *"))),
+      "orderly.yml", mock_root),
+    list(data = list(a = list(query = "SELECT *", database = "db"))))
+})
+
+
+test_that("error if db not specified and more than one db possible", {
+  mock_root <- list(config = list(
+                      orderly2.db = list(db1 = list(), db2 = list())))
+  expect_error(
+    orderly_db_read(
+      list(data = list(a = list(query = "SELECT *"))),
+      "orderly.yml", mock_root),
+    paste("More than one database configured ('db1', 'db2');",
+          "a 'database' field is required for 'orderly.yml:orderly2.db:data:a"),
+    fixed = TRUE)
+})
+
+
 test_that("validate read connection", {
   mock_root <- list(config = list(orderly2.db = list(db = list())))
   expect_equal(
@@ -197,7 +220,7 @@ test_that("require either connection or data", {
   mock_root <- list(config = list(orderly2.db = list(db = list())))
   expect_error(
     orderly_db_read(list(), "orderly.yml", mock_root),
-    "At least one of 'data' or 'connection' must be given")
+    "At least one of 'data' or 'views' or 'connection' must be given")
 })
 
 
@@ -264,4 +287,21 @@ test_that("run function cleans up connections", {
 test_that("can construct plugin", {
   expect_identical(orderly_db_plugin(),
                    orderly2:::.plugins$orderly2.db)
+})
+
+
+test_that("can construct a view, then read from it", {
+  root <- test_prepare_example("view", list(mtcars = mtcars))
+  env <- new.env()
+  id <- orderly2::orderly_run("view", root = root, envir = env)
+  expect_type(id, "character")
+  expect_true(file.exists(
+    file.path(root, "archive", "view", id, "mygraph.png")))
+
+  path_db <- file.path(root, "source.sqlite")
+  withr::with_db_connection(
+    list(con = DBI::dbConnect(RSQLite::SQLite(), path_db)),
+    ## View not present here, it was only available to the client that
+    ## created it.
+    expect_equal(DBI::dbListTables(con), "mtcars"))
 })
