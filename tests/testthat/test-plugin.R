@@ -265,3 +265,18 @@ test_that("can construct plugin", {
   expect_identical(orderly_db_plugin(),
                    orderly2:::.plugins$orderly2.db)
 })
+
+
+test_that("can construct a view, then read from it", {
+  root <- test_prepare_example("view", list(mtcars = mtcars))
+  env <- new.env()
+  id <- orderly2::orderly_run("view", root = root, envir = env)
+  expect_type(id, "character")
+  expect_true(file.exists(
+    file.path(root, "archive", "view", id, "mygraph.png")))
+
+  con <- DBI::dbConnect(RSQLite::SQLite(), file.path(root, "source.sqlite"))
+  ## View not present here, it was only available to the client that
+  ## created it.
+  expect_equal(DBI::dbListTables(con), "mtcars")
+})

@@ -89,6 +89,16 @@ orderly_db_run <- function(data, root, parameters, environment, path) {
 
   connections <- list()
 
+  for (nm in names(data$views)) {
+    database <- data$views[[nm]]$database
+    if (is.null(connections[[database]])) {
+      connections[[database]] <- orderly_db_connect(database, config)
+    }
+    sql <- sprintf("CREATE TEMPORARY VIEW %s AS\n%s",
+                   nm, data$views[[nm]]$query)
+    DBI::dbExecute(connections[[database]], sql)
+  }
+
   for (nm in names(data$data)) {
     database <- data$data[[nm]]$database
     if (is.null(connections[[database]])) {

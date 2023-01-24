@@ -1,0 +1,15 @@
+orderly2.db:
+  views:
+    thedata:
+      query: SELECT mpg, cyl FROM mtcars
+      database: source
+  data:
+    dat:
+      query: SELECT * FROM thedata
+      database: source
+
+script: script.R
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png
